@@ -1794,6 +1794,7 @@
   <java-symbol type="anim" name="lock_screen_behind_enter_wallpaper" />
   <java-symbol type="anim" name="lock_screen_behind_enter_fade_in" />
   <java-symbol type="anim" name="lock_screen_wallpaper_exit" />
+  <java-symbol type="anim" name="lock_screen_wallpaper_exit_noop" />
 
   <java-symbol type="bool" name="config_alwaysUseCdmaRssi" />
   <java-symbol type="dimen" name="status_bar_icon_size" />
@@ -2093,4 +2094,9 @@
   <java-symbol type="bool" name="config_LTE_eri_for_network_name" />
   <java-symbol type="bool" name="config_defaultInTouchMode" />
   <java-symbol type="bool" name="config_samsung_stk" />
+
+  <!-- Theme install failure notification -->
+  <java-symbol type="string" name="theme_install_error_title" />
+  <java-symbol type="string" name="theme_install_error_message" />
+
 </resources>

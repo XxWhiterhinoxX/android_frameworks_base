@@ -51,7 +51,8 @@ aaptSources := \
 aaptTests := \
     tests/AaptConfig_test.cpp \
     tests/AaptGroupEntry_test.cpp \
-    tests/ResourceFilter_test.cpp
+    tests/ResourceFilter_test.cpp \
+    tests/ZipReading_test.cpp \
 
 aaptCIncludes := \
     external/libpng \
@@ -105,6 +106,16 @@ include $(BUILD_HOST_STATIC_LIBRARY)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := aapt
+
+LOCAL_SRC_FILES := $(aaptMain)
+
+LOCAL_STATIC_LIBRARIES += \
+    libaapt \
+    $(aaptHostStaticLibs)
+
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/mocks
+
+LOCAL_LDLIBS += $(aaptHostLdLibs)
 LOCAL_CFLAGS += $(aaptCFlags)
 LOCAL_CPPFLAGS += $(aaptCppFlags)
 LOCAL_LDLIBS += $(aaptHostLdLibs)
@@ -126,6 +137,15 @@ LOCAL_LDLIBS += $(aaptHostLdLibs)
 LOCAL_SRC_FILES += $(aaptTests)
 LOCAL_C_INCLUDES += $(LOCAL_PATH)
 LOCAL_STATIC_LIBRARIES += libaapt $(aaptHostStaticLibs)
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/mocks
+
+LOCAL_STATIC_LIBRARIES += \
+    libaapt \
+    libgmock \
+    $(aaptHostStaticLibs)
+
+LOCAL_LDLIBS += $(aaptHostLdLibs)
+LOCAL_CFLAGS += $(aaptCFlags)
 
 include $(BUILD_HOST_NATIVE_TEST)
 
@@ -137,12 +157,13 @@ ifneq ($(SDK_ONLY),true)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := aapt
-LOCAL_CFLAGS += $(aaptCFlags)
+
 LOCAL_SRC_FILES := $(aaptSources) $(aaptMain)
 LOCAL_C_INCLUDES += \
     $(aaptCIncludes) \
     bionic \
     external/stlport/stlport
+
 LOCAL_SHARED_LIBRARIES := \
     libandroidfw \
     libutils \
@@ -150,9 +171,13 @@ LOCAL_SHARED_LIBRARIES := \
     libpng \
     liblog \
     libz
+
 LOCAL_STATIC_LIBRARIES := \
     libstlport_static \
     libexpat_static
+
+LOCAL_CFLAGS += $(aaptCFlags)
+LOCAL_CPPFLAGS += -Wno-non-virtual-dtor
 
 include $(BUILD_EXECUTABLE)
 
