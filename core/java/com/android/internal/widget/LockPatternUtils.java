@@ -1619,7 +1619,7 @@ public class LockPatternUtils {
                 || mode == DevicePolicyManager.PASSWORD_QUALITY_ALPHANUMERIC
                 || mode == DevicePolicyManager.PASSWORD_QUALITY_COMPLEX;
         final boolean secure = isPattern && isLockPatternEnabled() && savedPatternExists()
-                || isPassword && savedPasswordExists();
+                || isPassword && savedPasswordExists()
                 || isGesture && isLockGestureEnabled() && savedGestureExists();
         return secure;
     }

@@ -507,8 +507,4 @@
     <dimen name="fake_shadow_inset">1dp</dimen>
 
     <dimen name="fake_shadow_size">8dp</dimen>
-<<<<<<< HEAD
-=======
-
->>>>>>> e3ddfe6... [1/2] Base: implement App circle sidebar
 </resources>
