@@ -43,6 +43,8 @@ import com.android.systemui.recents.model.RecentsTaskLoader;
 import com.android.systemui.recents.model.Task;
 import com.android.systemui.recents.model.TaskStack;
 
+import com.android.systemui.R;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 
@@ -68,6 +70,7 @@ public class RecentsView extends FrameLayout implements TaskStackView.TaskStackV
     ArrayList<TaskStack> mStacks;
     View mSearchBar;
     RecentsViewCallbacks mCb;
+    View mClearRecents;
     boolean mAlreadyLaunchingTask;
 
     public RecentsView(Context context) {
@@ -134,6 +137,17 @@ public class RecentsView extends FrameLayout implements TaskStackView.TaskStackV
             View child = getChildAt(i);
             if (child != mSearchBar) {
                 removeViewAt(i);
+            }
+        }
+    }
+
+    public void dismissAllTasksAnimated() {
+        int childCount = getChildCount();
+        for (int i = 0; i < childCount; i++) {
+            View child = getChildAt(i);
+            if (child != mSearchBar) {
+                TaskStackView stackView = (TaskStackView) child;
+                stackView.dismissAllTasks();
             }
         }
     }
@@ -256,8 +270,8 @@ public class RecentsView extends FrameLayout implements TaskStackView.TaskStackV
         int height = MeasureSpec.getSize(heightMeasureSpec);
 
         // Get the search bar bounds and measure the search bar layout
+        Rect searchBarSpaceBounds = new Rect();
         if (mSearchBar != null) {
-            Rect searchBarSpaceBounds = new Rect();
             mConfig.getSearchBarBounds(width, height, mConfig.systemInsets.top, searchBarSpaceBounds);
             mSearchBar.measure(
                     MeasureSpec.makeMeasureSpec(searchBarSpaceBounds.width(), MeasureSpec.EXACTLY),
@@ -271,6 +285,7 @@ public class RecentsView extends FrameLayout implements TaskStackView.TaskStackV
         // Measure each TaskStackView with the full width and height of the window since the 
         // transition view is a child of that stack view
         int childCount = getChildCount();
+        int taskViewWidth = 0;
         for (int i = 0; i < childCount; i++) {
             View child = getChildAt(i);
             if (child != mSearchBar && child.getVisibility() != GONE) {
@@ -278,10 +293,69 @@ public class RecentsView extends FrameLayout implements TaskStackView.TaskStackV
                 // Set the insets to be the top/left inset + search bounds
                 tsv.setStackInsetRect(taskStackBounds);
                 tsv.measure(widthMeasureSpec, heightMeasureSpec);
+
+                // Retrieve the max width of the task views
+                int taskViewChildCount = tsv.getChildCount();
+                for (int j = 0; j < taskViewChildCount; j++) {
+                    View taskViewChild = tsv.getChildAt(j);
+                    taskViewWidth = Math.max(taskViewChild.getMeasuredWidth(), taskViewWidth);
+                }
+
             }
         }
 
+        if (mClearRecents != null) {
+            FrameLayout.LayoutParams params = (FrameLayout.LayoutParams)
+                    mClearRecents.getLayoutParams();
+            params.topMargin = taskStackBounds.top;
+            if (mSearchBar != null && (searchBarSpaceBounds.width() > taskViewWidth)) {
+                // Adjust to the search bar
+                params.rightMargin = width - searchBarSpaceBounds.right;
+            } else {
+                // Adjust to task views
+                params.rightMargin = (width / 2) - (taskViewWidth / 2);
+            }
+            mClearRecents.setLayoutParams(params);
+        }
+
         setMeasuredDimension(width, height);
+    }
+
+    public void noUserInteraction() {
+        if (mClearRecents != null) {
+            mClearRecents.setVisibility(View.VISIBLE);
+        }
+    }
+
+    @Override
+    protected void onAttachedToWindow () {
+        super.onAttachedToWindow();
+        mClearRecents = ((View)getParent()).findViewById(R.id.clear_recents);
+        mClearRecents.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if (mClearRecents.getAlpha() != 1f) {
+                    return;
+                }
+
+                // Hide clear recents before dismiss all tasks
+                mClearRecents.animate()
+                    .alpha(0f)
+                    .setStartDelay(0)
+                    .setUpdateListener(null)
+                    .setInterpolator(mConfig.fastOutSlowInInterpolator)
+                    .setDuration(mConfig.taskViewRemoveAnimDuration)
+                    .withEndAction(new Runnable() {
+                        @Override
+                        public void run() {
+                            mClearRecents.setVisibility(View.GONE);
+                            mClearRecents.setAlpha(1f);
+                        }
+                    })
+                    .start();
+
+                dismissAllTasksAnimated();
+            }
+        });
     }
 
     /**
@@ -493,7 +567,7 @@ public class RecentsView extends FrameLayout implements TaskStackView.TaskStackV
         if (tv == null) {
             post(launchRunnable);
         } else {
-            if (!task.group.isFrontMostTask(task)) {
+            if (task.group != null && !task.group.isFrontMostTask(task)) {
                 // For affiliated tasks that are behind other tasks, we must animate the front cards
                 // out of view before starting the task transition
                 stackView.startLaunchTaskAnimation(tv, launchRunnable, lockToTask);
