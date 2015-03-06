@@ -108,6 +108,7 @@ import android.view.ViewPropertyAnimator;
 import android.view.ViewStub;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
+import android.view.WindowManagerGlobal;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
 import android.view.animation.AccelerateDecelerateInterpolator;
@@ -290,6 +291,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
     private DozeServiceHost mDozeServiceHost;
     private boolean mScreenOnComingFromTouch;
     private boolean mHeadsUpViewAttached;
+    private DevForceNavbarObserver mDevForceNavbarObserver;
 
     int mPixelFormat;
     Object mQueueLock = new Object();
@@ -559,6 +561,43 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
         }
     }
 
+    class DevForceNavbarObserver extends ContentObserver {
+        DevForceNavbarObserver(Handler handler) {
+            super(handler);
+        }
+
+        void observe() {
+            ContentResolver resolver = mContext.getContentResolver();
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.DEV_FORCE_SHOW_NAVBAR), false, this);
+        }
+
+        @Override
+        public void onChange(boolean selfChange) {
+            boolean visible = Settings.System.getIntForUser(mContext.getContentResolver(),
+                    Settings.System.DEV_FORCE_SHOW_NAVBAR, 0, UserHandle.USER_CURRENT) == 1;
+            if (visible) {
+                forceAddNavigationBar();
+            } else {
+                removeNavigationBar();
+            }
+        }
+    }
+
+    private void forceAddNavigationBar() {
+        // If we have no Navbar view and we should have one, create it
+        if (mNavigationBarView != null) {
+            return;
+        }
+
+        mNavigationBarView =
+                (NavigationBarView) View.inflate(mContext, R.layout.navigation_bar, null);
+
+        mNavigationBarView.setDisabledFlags(mDisabled);
+        mNavigationBarView.setBar(this);
+        addNavigationBar();
+    }
+
     private void loadShowBatteryTextSetting() {
         ContentResolver resolver = mContext.getContentResolver();
         mShowBatteryText = Settings.System.getInt(resolver,
@@ -797,6 +836,17 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
 
         SettingsObserver observer = new SettingsObserver(mHandler);
         observer.observe();
+
+        // Developer options - Force Navigation bar
+        try {
+            boolean needsNav = mWindowManagerService.needsNavigationBar();
+            if (!needsNav) {
+                mDevForceNavbarObserver = new DevForceNavbarObserver(mHandler);
+                mDevForceNavbarObserver.observe();
+            }
+        } catch (RemoteException ex) {
+            // no window manager? good luck with that
+        }
 
         // Lastly, call to the icon policy to install/update all the icons.
         mIconPolicy = new PhoneStatusBarPolicy(mContext, mCastController);
@@ -1512,6 +1562,14 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
         prepareNavigationBarView();
 
         mWindowManager.addView(mNavigationBarView, getNavigationBarLayoutParams());
+    }
+
+    private void removeNavigationBar() {
+        if (DEBUG) Log.d(TAG, "removeNavigationBar: about to remove " + mNavigationBarView);
+        if (mNavigationBarView == null) return;
+
+        mWindowManager.removeView(mNavigationBarView);
+        mNavigationBarView = null;
     }
 
     private void repositionNavigationBar() {
