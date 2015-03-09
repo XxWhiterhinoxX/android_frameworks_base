@@ -1831,6 +1831,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             upgradeVersion = 113;
         }
 
+        if (upgradeVersion < 114) {
+            // Removal of back/recents is no longer supported
+            // due to pinned apps
+            db.beginTransaction();
+            try {
+                db.execSQL("DELETE FROM system WHERE name='"
+                        + Settings.System.NAV_BUTTONS + "'");
+                db.setTransactionSuccessful();
+            } finally {
+                db.endTransaction();
+            }
+
+            upgradeVersion = 114;
+        }
+
         // *** Remember to update DATABASE_VERSION above!
 
         if (upgradeVersion != currentVersion) {
