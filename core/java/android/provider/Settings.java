@@ -3306,6 +3306,13 @@ public final class Settings {
         public static final String STATUSBAR_CLOCK_DATE_FORMAT = "statusbar_clock_date_format";
 
         /**
+         * Config for advanced power menu
+         *
+         * @hide
+         */
+        public static final String POWER_MENU_CONFIG = "power_menu_config";
+
+        /**
          * MediaScanner behavior on boot.
          * 0 = enabled
          * 1 = ask (notification)
@@ -4906,6 +4913,12 @@ public final class Settings {
          */
         public static final String TRUST_AGENTS_INITIALIZED =
                 "trust_agents_initialized";
+
+        /**
+         * Chamber on / off (custom setting shortcuts)
+         * @hide
+         */
+        public static final String CHAMBER_OF_SECRETS = "chamber_of_secrets";
 
         /**
          * The Logging ID (a unique 64-bit value) as a hex string.
@@ -7732,11 +7745,12 @@ public final class Settings {
         /**
          * Defines global runtime overrides to window policy.
          *
-         * See {@link com.android.internal.policy.impl.PolicyControl} for value format.
+         * See {@link android.view.WindowManagerPolicyControl} for value format.
          *
          * @hide
          */
         public static final String POLICY_CONTROL = "policy_control";
+        public static final String POLICY_CONTROL_SELECTED = "policy_control_selected";
 
         /**
          * Defines global zen mode.  ZEN_MODE_OFF, ZEN_MODE_IMPORTANT_INTERRUPTIONS,
