@@ -16,8 +16,8 @@
 
 package android.telecom;
 
-import android.annotation.SystemApi;
 import android.annotation.SdkConstant;
+import android.annotation.SystemApi;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -42,8 +42,37 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * A {@link android.app.Service} that provides telephone connections to processes running on an
- * Android device.
+ * {@code ConnectionService} is an abstract service that should be implemented by any app which can
+ * make phone calls and want those calls to be integrated into the built-in phone app.
+ * Once implemented, the {@code ConnectionService} needs two additional steps before it will be
+ * integrated into the phone app:
+ * <p>
+ * 1. <i>Registration in AndroidManifest.xml</i>
+ * <br/>
+ * <pre>
+ * &lt;service android:name="com.example.package.MyConnectionService"
+ *    android:label="@string/some_label_for_my_connection_service"
+ *    android:permission="android.permission.BIND_CONNECTION_SERVICE"&gt;
+ *  &lt;intent-filter&gt;
+ *   &lt;action android:name="android.telecom.ConnectionService" /&gt;
+ *  &lt;/intent-filter&gt;
+ * &lt;/service&gt;
+ * </pre>
+ * <p>
+ * 2. <i> Registration of {@link PhoneAccount} with {@link TelecomManager}.</i>
+ * <br/>
+ * See {@link PhoneAccount} and {@link TelecomManager#registerPhoneAccount} for more information.
+ * <p>
+ * Once registered and enabled by the user in the dialer settings, telecom will bind to a
+ * {@code ConnectionService} implementation when it wants that {@code ConnectionService} to place
+ * a call or the service has indicated that is has an incoming call through
+ * {@link TelecomManager#addNewIncomingCall}. The {@code ConnectionService} can then expect a call
+ * to {@link #onCreateIncomingConnection} or {@link #onCreateOutgoingConnection} wherein it
+ * should provide a new instance of a {@link Connection} object.  It is through this
+ * {@link Connection} object that telecom receives state updates and the {@code ConnectionService}
+ * receives call-commands such as answer, reject, hold and disconnect.
+ * <p>
+ * When there are no more live calls, telecom will unbind from the {@code ConnectionService}.
  * @hide
  */
 @SystemApi
@@ -429,11 +458,13 @@ public abstract class ConnectionService extends Service {
         }
 
         @Override
-        public void onCapabilitiesChanged(Conference conference, int capabilities) {
+        public void onConnectionCapabilitiesChanged(
+                Conference conference,
+                int connectionCapabilities) {
             String id = mIdByConference.get(conference);
             Log.d(this, "call capabilities: conference: %s",
-                    PhoneCapabilities.toString(capabilities));
-            mAdapter.setCallCapabilities(id, capabilities);
+                    Connection.capabilitiesToString(connectionCapabilities));
+            mAdapter.setConnectionCapabilities(id, connectionCapabilities);
         }
     };
 
@@ -512,6 +543,13 @@ public abstract class ConnectionService extends Service {
         }
 
         @Override
+        public void onPostDialChar(Connection c, char nextChar) {
+            String id = mIdByConnection.get(c);
+            Log.d(this, "Adapter onPostDialChar %s, %s", c, nextChar);
+            mAdapter.onPostDialChar(id, nextChar);
+        }
+
+        @Override
         public void onRingbackRequested(Connection c, boolean ringback) {
             String id = mIdByConnection.get(c);
             Log.d(this, "Adapter onRingback %b", ringback);
@@ -519,11 +557,11 @@ public abstract class ConnectionService extends Service {
         }
 
         @Override
-        public void onCallCapabilitiesChanged(Connection c, int capabilities) {
+        public void onConnectionCapabilitiesChanged(Connection c, int capabilities) {
             String id = mIdByConnection.get(c);
             Log.d(this, "capabilities: parcelableconnection: %s",
-                    PhoneCapabilities.toString(capabilities));
-            mAdapter.setCallCapabilities(id, capabilities);
+                    Connection.capabilitiesToString(capabilities));
+            mAdapter.setConnectionCapabilities(id, capabilities);
         }
 
         @Override
@@ -632,8 +670,7 @@ public abstract class ConnectionService extends Service {
         Log.v(this, "createConnection, number: %s, state: %s, capabilities: %s, properties: 0x%x",
                 Connection.toLogSafePhoneNumber(number),
                 Connection.stateToString(connection.getState()),
-                PhoneCapabilities.toString(connection.getCallCapabilities()),
-                connection.getCallProperties());
+                Connection.capabilitiesToString(connection.getConnectionCapabilities()));
 
         Log.d(this, "createConnection, calling handleCreateConnectionSuccessful %s", callId);
         mAdapter.handleCreateConnectionComplete(
@@ -642,8 +679,7 @@ public abstract class ConnectionService extends Service {
                 new ParcelableConnection(
                         getAccountHandle(request, connection),
                         connection.getState(),
-                        connection.getCallCapabilities(),
-                        connection.getCallProperties(),
+                        connection.getConnectionCapabilities(),
                         connection.getAddress(),
                         connection.getAddressPresentation(),
                         connection.getCallerDisplayName(),
@@ -655,20 +691,7 @@ public abstract class ConnectionService extends Service {
                         connection.getAudioModeIsVoip(),
                         connection.getStatusHints(),
                         connection.getDisconnectCause(),
-                        createIdList(connection.getConferenceables()),
-                        connection.getCallSubstate()));
-    }
-
-    /** @hide */
-    public PhoneAccountHandle getAccountHandle(
-            final ConnectionRequest request, Connection connection) {
-        PhoneAccountHandle pHandle = connection.getPhoneAccountHandle();
-        if (pHandle != null) {
-            Log.i(this, "getAccountHandle, return account handle from local, %s", pHandle);
-            return pHandle;
-        } else {
-            return request.getAccountHandle();
-        }
+                        createIdList(connection.getConferenceables())));
     }
 
     private void abort(String callId) {
@@ -882,7 +905,9 @@ public abstract class ConnectionService extends Service {
 
     /**
      * Ask some other {@code ConnectionService} to create a {@code RemoteConnection} given an
-     * incoming request. This is used to attach to existing incoming calls.
+     * incoming request. This is used by {@code ConnectionService}s that are registered with
+     * {@link PhoneAccount#CAPABILITY_CONNECTION_MANAGER} and want to be able to manage
+     * SIM-based incoming calls.
      *
      * @param connectionManagerPhoneAccount See description at
      *         {@link #onCreateOutgoingConnection(PhoneAccountHandle, ConnectionRequest)}.
@@ -899,7 +924,9 @@ public abstract class ConnectionService extends Service {
 
     /**
      * Ask some other {@code ConnectionService} to create a {@code RemoteConnection} given an
-     * outgoing request. This is used to initiate new outgoing calls.
+     * outgoing request. This is used by {@code ConnectionService}s that are registered with
+     * {@link PhoneAccount#CAPABILITY_CONNECTION_MANAGER} and want to be able to use the
+     * SIM-based {@code ConnectionService} to place its outgoing calls.
      *
      * @param connectionManagerPhoneAccount See description at
      *         {@link #onCreateOutgoingConnection(PhoneAccountHandle, ConnectionRequest)}.
@@ -915,12 +942,19 @@ public abstract class ConnectionService extends Service {
     }
 
     /**
-     * Adds two {@code RemoteConnection}s to some {@code RemoteConference}.
+     * Indicates to the relevant {@code RemoteConnectionService} that the specified
+     * {@link RemoteConnection}s should be merged into a conference call.
+     * <p>
+     * If the conference request is successful, the method {@link #onRemoteConferenceAdded} will
+     * be invoked.
+     *
+     * @param remoteConnection1 The first of the remote connections to conference.
+     * @param remoteConnection2 The second of the remote connections to conference.
      */
     public final void conferenceRemoteConnections(
-            RemoteConnection a,
-            RemoteConnection b) {
-        mRemoteConnectionManager.conferenceRemoteConnections(a, b);
+            RemoteConnection remoteConnection1,
+            RemoteConnection remoteConnection2) {
+        mRemoteConnectionManager.conferenceRemoteConnections(remoteConnection1, remoteConnection2);
     }
 
     /**
@@ -943,8 +977,9 @@ public abstract class ConnectionService extends Service {
             ParcelableConference parcelableConference = new ParcelableConference(
                     conference.getPhoneAccountHandle(),
                     conference.getState(),
-                    conference.getCapabilities(),
-                    connectionIds);
+                    conference.getConnectionCapabilities(),
+                    connectionIds,
+                    conference.getConnectTimeMillis());
             mAdapter.addConferenceCall(id, parcelableConference);
 
             // Go through any child calls and set the parent.
@@ -974,7 +1009,7 @@ public abstract class ConnectionService extends Service {
             ParcelableConnection parcelableConnection = new ParcelableConnection(
                     phoneAccountHandle,
                     connection.getState(),
-                    connection.getCallCapabilities(),
+                    connection.getConnectionCapabilities(),
                     connection.getAddress(),
                     connection.getAddressPresentation(),
                     connection.getCallerDisplayName(),
@@ -986,8 +1021,7 @@ public abstract class ConnectionService extends Service {
                     connection.getAudioModeIsVoip(),
                     connection.getStatusHints(),
                     connection.getDisconnectCause(),
-                    emptyList,
-                    connection.getCallSubstate());
+                    emptyList);
             mAdapter.addExistingConnection(id, parcelableConnection);
         }
     }
@@ -1074,6 +1108,16 @@ public abstract class ConnectionService extends Service {
      */
     public void onConference(Connection connection1, Connection connection2) {}
 
+    /**
+     * Indicates that a remote conference has been created for existing {@link RemoteConnection}s.
+     * When this method is invoked, this {@link ConnectionService} should create its own
+     * representation of the conference call and send it to telecom using {@link #addConference}.
+     * <p>
+     * This is only relevant to {@link ConnectionService}s which are registered with
+     * {@link PhoneAccount#CAPABILITY_CONNECTION_MANAGER}.
+     *
+     * @param conference The remote conference call.
+     */
     public void onRemoteConferenceAdded(RemoteConference conference) {}
 
     /**

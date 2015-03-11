@@ -238,6 +238,14 @@ public class Toast {
     }
 
     /**
+     * Gets the LayoutParams for the Toast window.
+     * @hide
+     */
+    public WindowManager.LayoutParams getWindowParams() {
+        return mTN.mParams;
+    }
+    
+    /**
      * Make a standard toast that just contains a text view.
      *
      * @param context  The context to use.  Usually your {@link android.app.Application}

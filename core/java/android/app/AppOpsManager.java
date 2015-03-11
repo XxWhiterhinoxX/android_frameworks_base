@@ -31,6 +31,7 @@ import android.os.Parcelable;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.SystemProperties;
+import android.os.UserHandle;
 import android.os.UserManager;
 import android.util.ArrayMap;
 
@@ -1306,6 +1307,18 @@ public class AppOpsManager {
     }
 
     /**
+     * @hide
+     */
+    public static int strDebugOpToOp(String op) {
+        for (int i=0; i<sOpNames.length; i++) {
+            if (sOpNames[i].equals(op)) {
+                return i;
+            }
+        }
+        throw new IllegalArgumentException("Unknown operation string: " + op);
+    }
+
+    /**
      * Retrieve the permission associated with an operation, or null if there is not one.
      * @hide
      */
@@ -1584,7 +1597,7 @@ public class AppOpsManager {
     /** @hide */
     public void resetAllModes() {
         try {
-            mService.resetAllModes();
+            mService.resetAllModes(UserHandle.myUserId(), null);
         } catch (RemoteException e) {
         }
     }

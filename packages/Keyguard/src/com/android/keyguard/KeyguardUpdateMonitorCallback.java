@@ -49,20 +49,8 @@ public class KeyguardUpdateMonitorCallback {
 
     /**
      * Called when the carrier PLMN or SPN changes.
-     *
-     * @param plmn The operator name of the registered network.  May be null if it shouldn't
-     *   be displayed.
-     * @param spn The service provider name.  May be null if it shouldn't be displayed.
-     * @param subId The subscription id which PLMN or SPN changed.
      */
-    void onRefreshCarrierInfo(long subId, CharSequence plmn, CharSequence spn) { }
-
-    /**
-     * Called when the airplane mode changes.
-     *
-     * @param on Indicates if the airplane mode is now enable.
-     */
-    void onAirplaneModeChanged(boolean on) { }
+    public void onRefreshCarrierInfo() { }
 
     /**
      * Called when the ringer mode changes.
@@ -128,11 +116,12 @@ public class KeyguardUpdateMonitorCallback {
     public void onUserSwitchComplete(int userId) { }
 
     /**
-     * Called when the SIM state of a subscription changes.
+     * Called when the SIM state changes.
+     * @param slotId
      * @param simState
      * @param subId The subscription id which SIM state changed.
      */
-    public void onSimStateChanged(long subId, IccCardConstants.State simState) {}
+    public void onSimStateChanged(int subId, int slotId, IccCardConstants.State simState) { }
 
     /**
      * Called when a user is removed.

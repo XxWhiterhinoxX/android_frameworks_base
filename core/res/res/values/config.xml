@@ -2024,5 +2024,63 @@
 	
 	<!--Dummy for CMs wakekeys-->
 	<integer name="config_deviceHardwareWakeKeys">0</integer>
+
+    <!-- Flag indicating whether strict threshold is used, or lenient threshold is used,
+          when evaluating RSRP for LTE antenna bar display
+           0. Strict threshold
+           1. Lenient threshold
+    -->
+    <integer name="config_LTE_RSRP_threshold_type">1</integer>
+
+    <!-- Enabled built-in zen mode condition providers -->
+    <string-array translatable="false" name="config_system_condition_providers">
+        <item>countdown</item>
+        <item>downtime</item>
+        <item>next_alarm</item>
+    </string-array>
+
+    <!-- Show the next-alarm as a zen exit condition if it occurs in the next n hours. -->
+    <integer name="config_next_alarm_condition_lookahead_threshold_hrs">12</integer>
+
+    <!-- Show downtime as a zen exit condition if it starts in the next n hours. -->
+    <integer name="config_downtime_condition_lookahead_threshold_hrs">4</integer>
+
+    <!-- Flags enabling default window features. See Window.java -->
+    <bool name="config_defaultWindowFeatureOptionsPanel">true</bool>
+    <bool name="config_defaultWindowFeatureContextMenu">true</bool>
+
+    <!-- This config is used to check if the carrier requires converting destination
+         number before sending out a SMS.
+         Formats for this configuration as below:
+         [true or false][;optional gid]
+         The logic to pick up the configuration:
+         (1) If the "config_sms_convert_destination_number_support" array has no gid
+             special item, the last one will be picked
+         (2) If the "config_sms_convert_destination_number_support" array has gid special
+             item and it matches the current sim's gid, it will be picked.
+         (3) If the "config_sms_convert_destination_number_support" array has gid special
+             item but it doesn't match the current sim's gid, the last one without gid
+             will be picked -->
+    <string-array translatable="false" name="config_sms_convert_destination_number_support">
+        <item>false</item>
+    </string-array>
+
+    <!-- The maximum bitmap size that can be written to a MediaMetadata object. This value
+         is the max width/height allowed in dips.-->
+    <dimen name="config_mediaMetadataBitmapMaxSize">320dp</dimen>
+
+    <string translatable="false" name="prohibit_manual_network_selection_in_gobal_mode">false</string>
+
+    <!-- An array of CDMA roaming indicators which means international roaming -->
+    <integer-array translatable="false" name="config_cdma_international_roaming_indicators" />
+
+    <!-- set the system language as value of EF LI/EF PL -->
+    <bool name="config_use_sim_language_file">true</bool>
+
+    <!-- Use ERI text for network name on CDMA LTE -->
+    <bool name="config_LTE_eri_for_network_name">true</bool>
+
+    <!-- Whether to start in touch mode -->
+    <bool name="config_defaultInTouchMode">true</bool>
 	
 </resources>

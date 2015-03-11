@@ -114,6 +114,10 @@ public class ImsCallProfile implements Parcelable {
     public static final String EXTRA_CALL_MODE_CHANGEABLE = "call_mode_changeable";
     public static final String EXTRA_CONFERENCE_AVAIL = "conference_avail";
 
+    // Extra string for internal use only. OEMs should not use
+    // this for packing extras.
+    public static final String EXTRA_OEM_EXTRAS = "OemCallExtras";
+
     /**
      * Integer extra properties
      *  oir : Rule for originating identity (number) presentation, MO/MT.
@@ -152,7 +156,7 @@ public class ImsCallProfile implements Parcelable {
     public static final int DIALSTRING_USSD = 2;
 
     /**
-     * Values for causes that restricts that restrict call types
+     * Values for causes that restrict call types
      */
     // Default cause not restricted at peer and HD is supported
     public static final int CALL_RESTRICT_CAUSE_NONE = 0;
@@ -280,6 +284,7 @@ public class ImsCallProfile implements Parcelable {
     public String toString() {
         return "{ serviceType=" + mServiceType +
                 ", callType=" + mCallType +
+                ", restrictCause=" + mRestrictCause +
                 ", callExtras=" + mCallExtras.toString() +
                 ", mediaProfile=" + mMediaProfile.toString() + " }";
     }

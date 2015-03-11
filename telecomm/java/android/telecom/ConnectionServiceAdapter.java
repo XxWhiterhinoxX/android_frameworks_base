@@ -191,10 +191,10 @@ final class ConnectionServiceAdapter implements DeathRecipient {
         }
     }
 
-    void setCallCapabilities(String callId, int capabilities) {
+    void setConnectionCapabilities(String callId, int capabilities) {
         for (IConnectionServiceAdapter adapter : mAdapters) {
             try {
-                adapter.setCallCapabilities(callId, capabilities);
+                adapter.setConnectionCapabilities(callId, capabilities);
             } catch (RemoteException ignored) {
             }
         }
@@ -246,6 +246,15 @@ final class ConnectionServiceAdapter implements DeathRecipient {
         for (IConnectionServiceAdapter adapter : mAdapters) {
             try {
                 adapter.onPostDialWait(callId, remaining);
+            } catch (RemoteException ignored) {
+            }
+        }
+    }
+
+    void onPostDialChar(String callId, char nextChar) {
+        for (IConnectionServiceAdapter adapter : mAdapters) {
+            try {
+                adapter.onPostDialChar(callId, nextChar);
             } catch (RemoteException ignored) {
             }
         }
@@ -365,38 +374,6 @@ final class ConnectionServiceAdapter implements DeathRecipient {
         for (IConnectionServiceAdapter adapter : mAdapters) {
             try {
                 adapter.setConferenceableConnections(callId, conferenceableCallIds);
-            } catch (RemoteException ignored) {
-            }
-        }
-    }
-
-    void setPhoneAccountHandle(String callId, PhoneAccountHandle pHandle) {
-        Log.v(this, "setPhoneAccountHandle: %s, %s", callId, pHandle);
-        for (IConnectionServiceAdapter adapter : mAdapters) {
-            try {
-                adapter.setPhoneAccountHandle(callId, pHandle);
-            } catch (RemoteException ignored) {
-            }
-        }
-    }
-
-    /**
-     * Set the call substate for the connection.
-     * Valid values: {@link Connection#CALL_SUBSTATE_NONE},
-     * {@link Connection#CALL_SUBSTATE_AUDIO_CONNECTED_SUSPENDED},
-     * {@link Connection#CALL_SUBSTATE_VIDEO_CONNECTED_SUSPENDED},
-     * {@link Connection#CALL_SUBSTATE_AVP_RETRY},
-     * {@link Connection#CALL_SUBSTATE_MEDIA_PAUSED}.
-     *
-     * @param callId The unique ID of the call to set the substate for.
-     * @param callSubstate The new call substate.
-     * @hide
-     */
-    public final void setCallSubstate(String callId, int callSubstate) {
-        Log.v(this, "setCallSubstate: %d", callSubstate);
-        for (IConnectionServiceAdapter adapter : mAdapters) {
-            try {
-                adapter.setCallSubstate(callId, callSubstate);
             } catch (RemoteException ignored) {
             }
         }

@@ -334,27 +334,7 @@ public class TelephonyIntents {
             = "codeaurora.intent.action.ACTION_MANAGED_ROAMING_IND";
 
     /**
-     * <p>Broadcast Action: It indicates one column of a siminfo record has been changed
-     * The intent will have the following extra values:</p>
-     * <ul>
-     *   <li><em>columnName</em> - The siminfo column that is updated.</li>
-     *   <li><em>stringContent</em> - The string value of the updated column.</li>
-     *   <li><em>intContent</em> - The int value of the updated column.</li>
-     * </ul>
-     * <p class="note">This is a protected intent that can only be sent
-     * by the system.
-     */
-    public static final String ACTION_SIMINFO_CONTENT_CHANGE
-            = "android.intent.action.ACTION_SIMINFO_CONTENT_CHANGE";
-
-    /**
      * <p>Broadcast Action: It indicates one column of a subinfo record has been changed
-     * The intent will have the following extra values:</p>
-     * <ul>
-     *   <li><em>columnName</em> - The siminfo column that is updated.</li>
-     *   <li><em>stringContent</em> - The string value of the updated column.</li>
-     *   <li><em>intContent</em> - The int value of the updated column.</li>
-     * </ul>
      * <p class="note">This is a protected intent that can only be sent
      * by the system.
      */
@@ -362,27 +342,13 @@ public class TelephonyIntents {
             = "android.intent.action.ACTION_SUBINFO_CONTENT_CHANGE";
 
     /**
-     * <p>Broadcast Action: It indicates siminfo update is completed when SIM inserted state change
-     * The intent will have the following extra values:</p>
-     * <p class="note">This is a protected intent that can only be sent
-     * by the system.
-     */
-    public static final String ACTION_SIMINFO_UPDATED
-            = "android.intent.action.ACTION_SIMINFO_UPDATED";
-
-    /**
      * <p>Broadcast Action: It indicates subinfo record update is completed
      * when SIM inserted state change
-     * The intent will have the following extra values:</p>
      * <p class="note">This is a protected intent that can only be sent
      * by the system.
      */
     public static final String ACTION_SUBINFO_RECORD_UPDATED
             = "android.intent.action.ACTION_SUBINFO_RECORD_UPDATED";
-
-    public static final String EXTRA_COLUMN_NAME = "columnName";
-    public static final String EXTRA_INT_CONTENT = "intContent";
-    public static final String EXTRA_STRING_CONTENT = "stringContent";
 
     /**
      * Broadcast Action: The default subscription has changed.  This has the following
@@ -424,20 +390,22 @@ public class TelephonyIntents {
     public static final String ACTION_DEFAULT_SMS_SUBSCRIPTION_CHANGED
             = "android.intent.action.ACTION_DEFAULT_SMS_SUBSCRIPTION_CHANGED";
 
-
     /**
-     * Broadcast Action: The subscription activation/deactivation request result.
-     *  This has the following extra values:</p>
+     * Broadcast Action: An attempt to set phone radio type and access technology has changed.
+     * This has the following extra values:
      * <ul>
-     *   <li><em>operationResult</em> - A int, result of subscription
-     *   activation/deactivation request.</li>
-     *   <li><em>NewSubState</em> - A int, new sub state(activate/deactivate) clients
-     *   trying to set for the current subscription.</li>
+     *   <li><em>phones radio access family </em> - A RadioAccessFamily
+     *   array, contain phone ID and new radio access family for each phone.</li>
      * </ul>
      */
-    public static final String ACTION_SUBSCRIPTION_SET_UICC_RESULT
-            = "org.codeaurora.intent.action.ACTION_SUBSCRIPTION_SET_UICC_RESULT";
+    public static final String ACTION_SET_RADIO_CAPABILITY_DONE =
+            "android.intent.action.ACTION_SET_RADIO_CAPABILITY_DONE";
 
-    public static final String EXTRA_RESULT  = "operationResult";
-    public static final String EXTRA_NEW_SUB_STATE = "newSubState";
+    public static final String EXTRA_RADIO_ACCESS_FAMILY = "rafs";
+
+    /**
+     * Broadcast Action: An attempt to set phone radio access family has failed.
+     */
+    public static final String ACTION_SET_RADIO_CAPABILITY_FAILED =
+            "android.intent.action.ACTION_SET_RADIO_CAPABILITY_FAILED";
 }

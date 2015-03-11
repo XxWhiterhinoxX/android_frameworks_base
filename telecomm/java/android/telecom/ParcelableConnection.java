@@ -34,8 +34,7 @@ import java.util.List;
 public final class ParcelableConnection implements Parcelable {
     private final PhoneAccountHandle mPhoneAccount;
     private final int mState;
-    private final int mCapabilities;
-    private final int mProperties;
+    private final int mConnectionCapabilities;
     private final Uri mAddress;
     private final int mAddressPresentation;
     private final String mCallerDisplayName;
@@ -69,8 +68,7 @@ public final class ParcelableConnection implements Parcelable {
             int callSubstate) {
         mPhoneAccount = phoneAccount;
         mState = state;
-        mCapabilities = capabilities;
-        mProperties = properties;
+        mConnectionCapabilities = capabilities;
         mAddress = address;
         mAddressPresentation = addressPresentation;
         mCallerDisplayName = callerDisplayName;
@@ -129,8 +127,8 @@ public final class ParcelableConnection implements Parcelable {
     }
 
     // Bit mask of actions a call supports, values are defined in {@link CallCapabilities}.
-    public int getCapabilities() {
-        return mCapabilities;
+    public int getConnectionCapabilities() {
+        return mConnectionCapabilities;
     }
 
     public int getProperties() {
@@ -193,9 +191,7 @@ public final class ParcelableConnection implements Parcelable {
                 .append(", state:")
                 .append(mState)
                 .append(", capabilities:")
-                .append(PhoneCapabilities.toString(mCapabilities))
-                .append(", properties:")
-                .append(Integer.toHexString(mProperties))
+                .append(Connection.capabilitiesToString(mConnectionCapabilities))
                 .toString();
     }
 
@@ -260,8 +256,7 @@ public final class ParcelableConnection implements Parcelable {
     public void writeToParcel(Parcel destination, int flags) {
         destination.writeParcelable(mPhoneAccount, 0);
         destination.writeInt(mState);
-        destination.writeInt(mCapabilities);
-        destination.writeInt(mProperties);
+        destination.writeInt(mConnectionCapabilities);
         destination.writeParcelable(mAddress, 0);
         destination.writeInt(mAddressPresentation);
         destination.writeString(mCallerDisplayName);

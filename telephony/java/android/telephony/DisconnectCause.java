@@ -161,15 +161,20 @@ public class DisconnectCause {
     public static final int OUTGOING_CANCELED = 44;
 
     /**
+     * The call, which was an IMS call, disconnected because it merged with another call.
+     */
+    public static final int IMS_MERGED_SUCCESSFULLY = 45;
+
+    /**
      * Stk Call Control modified DIAL request to USSD request.
      * {@hide}
      */
-    public static final int DIAL_MODIFIED_TO_USSD          = 45;
+    public static final int DIAL_MODIFIED_TO_USSD          = 46;
     /**
      * Stk Call Control modified DIAL request to SS request.
      * {@hide}
      */
-    public static final int DIAL_MODIFIED_TO_SS            = 46;
+    public static final int DIAL_MODIFIED_TO_SS            = 47;
     /**
      * Stk Call Control modified DIAL request to DIAL with modified data.
      * {@hide}
@@ -232,7 +237,7 @@ public class DisconnectCause {
     // 4) Update toString() with the newly added disconnect type.
     // 5) Update android.telecom.DisconnectCauseUtil with any mappings to a telecom.DisconnectCause.
     //
-    // NextId: 92
+    // NextId: 93
     //*********************************************************************************************
 
     /** Smallest valid value for call disconnect codes. */
@@ -240,7 +245,6 @@ public class DisconnectCause {
 
     /** Largest valid value for call disconnect codes. */
     public static final int MAXIMUM_VALID_VALUE = IMS_MERGED_SUCCESSFULLY;
-
     /** Private constructor to avoid class instantiation. */
     private DisconnectCause() {
         // Do nothing.

@@ -16,6 +16,7 @@
 
 package com.android.keyguard;
 
+import android.app.ActivityManager;
 import android.app.AlarmManager;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -140,6 +141,8 @@ public class KeyguardStatusView extends GridLayout implements
         mAlarmStatusView = (TextView) findViewById(R.id.alarm_status);
         mDateView = (TextClock) findViewById(R.id.date_view);
         mClockView = (TextClock) findViewById(R.id.clock_view);
+        mDateView.setShowCurrentUserTime(true);
+        mClockView.setShowCurrentUserTime(true);
         mOwnerInfo = (TextView) findViewById(R.id.owner_info);
         mWeatherView = findViewById(R.id.keyguard_weather_view);
         mWeatherCity = (TextView) findViewById(R.id.city);
@@ -204,7 +207,9 @@ public class KeyguardStatusView extends GridLayout implements
         if (info == null) {
             return "";
         }
-        String skeleton = DateFormat.is24HourFormat(context) ? "EHm" : "Ehma";
+        String skeleton = DateFormat.is24HourFormat(context, ActivityManager.getCurrentUser())
+                ? "EHm"
+                : "Ehma";
         String pattern = DateFormat.getBestDateTimePattern(Locale.getDefault(), skeleton);
         return DateFormat.format(pattern, info.getTriggerTime()).toString();
     }

@@ -17,10 +17,14 @@ package com.android.keyguard;
 
 import android.app.admin.DevicePolicyManager;
 import android.content.Context;
+import android.telephony.SubscriptionInfo;
+import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 
 import com.android.internal.telephony.IccCardConstants;
 import com.android.internal.widget.LockPatternUtils;
+
+import java.util.List;
 
 public class KeyguardSecurityModel {
 
@@ -37,7 +41,8 @@ public class KeyguardSecurityModel {
         Biometric, // Unlock with a biometric key (e.g. finger print or face unlock)
         Account, // Unlock by entering an account's login and password.
         SimPin, // Unlock by entering a sim pin.
-        SimPuk // Unlock by entering a sim puk
+        SimPuk, // Unlock by entering a sim puk
+        Gesture // unlock by drawing a gesture
     }
 
     private Context mContext;
@@ -75,21 +80,13 @@ public class KeyguardSecurityModel {
     }
 
     SecurityMode getSecurityMode() {
-        KeyguardUpdateMonitor updateMonitor = KeyguardUpdateMonitor.getInstance(mContext);
-        IccCardConstants.State simState = IccCardConstants.State.UNKNOWN;
+        KeyguardUpdateMonitor monitor = KeyguardUpdateMonitor.getInstance(mContext);
         SecurityMode mode = SecurityMode.None;
-        for (int i = 0; i < updateMonitor.getNumPhones(); i++) {
-            long subId = updateMonitor.getSubIdByPhoneId(i);
-            simState = updateMonitor.getSimState(subId);
-            if (simState == IccCardConstants.State.PIN_REQUIRED
-                || simState == IccCardConstants.State.PUK_REQUIRED) {
-                break;
-            }
-        }
-
-        if (simState == IccCardConstants.State.PIN_REQUIRED) {
+        if (SubscriptionManager.isValidSubscriptionId(
+                monitor.getNextSubIdForState(IccCardConstants.State.PIN_REQUIRED))) {
             mode = SecurityMode.SimPin;
-        } else if (simState == IccCardConstants.State.PUK_REQUIRED
+        } else if (SubscriptionManager.isValidSubscriptionId(
+                    monitor.getNextSubIdForState(IccCardConstants.State.PUK_REQUIRED))
                 && mLockPatternUtils.isPukUnlockScreenEnable()) {
             mode = SecurityMode.SimPuk;
         } else {
@@ -114,6 +111,12 @@ public class KeyguardSecurityModel {
                             SecurityMode.Account : SecurityMode.Pattern;
                     }
                     break;
+                case DevicePolicyManager.PASSWORD_QUALITY_GESTURE_WEAK:
+                    if (mLockPatternUtils.isLockGestureEnabled()) {
+                        mode = mLockPatternUtils.isPermanentlyLocked() ?
+                            SecurityMode.Account : SecurityMode.Gesture;
+                    }
+                    break;
 
                 default:
                     throw new IllegalStateException("Unknown security quality:" + security);
@@ -134,7 +137,8 @@ public class KeyguardSecurityModel {
         if (isBiometricUnlockEnabled() && !isBiometricUnlockSuppressed()
                 && (mode == SecurityMode.Password
                         || mode == SecurityMode.PIN
-                        || mode == SecurityMode.Pattern)) {
+                        || mode == SecurityMode.Pattern
+                        || mode == SecurityMode.Gesture )) {
             return SecurityMode.Biometric;
         }
         return mode; // no alternate, return what was given
@@ -151,6 +155,8 @@ public class KeyguardSecurityModel {
             case Biometric:
                 return getSecurityMode();
             case Pattern:
+                return SecurityMode.Account;
+            case Gesture:
                 return SecurityMode.Account;
         }
         return mode; // no backup, return current security mode

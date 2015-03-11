@@ -103,8 +103,6 @@ public class DctConstants {
     public static final int CMD_NET_STAT_POLL = BASE + 40;
     public static final int EVENT_DATA_RAT_CHANGED = BASE + 41;
     public static final int CMD_CLEAR_PROVISIONING_SPINNER = BASE + 42;
-    public static final int EVENT_MODEM_DATA_PROFILE_READY = BASE + 43;
-    public static final int EVENT_GET_WWAN_IWLAN_COEXISTENCE_DONE = BASE + 44;
 
     /***** Constants *****/
 
@@ -121,6 +119,7 @@ public class DctConstants {
     public static final int APN_EMERGENCY_ID = 9;
     public static final int APN_NUM_TYPES = 10;
 
+    public static final int INVALID = -1;
     public static final int DISABLED = 0;
     public static final int ENABLED = 1;
 
